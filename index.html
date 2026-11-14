@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Glowmoth</title>
+<style>
+html,body{margin:0;height:100%;background:#07071a;overflow:hidden;touch-action:none;font-family:system-ui,sans-serif}
+canvas{display:block;width:100%;height:100%}
+</style></head><body>
+<canvas id="c"></canvas>
+<script>
+// Glowmoth - guide a moth through the dark. Collect motes of light, avoid spiders.
+// Your light shrinks over time; motes refill it. Move with mouse/touch/arrow keys/WASD.
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}addEventListener('resize',rs);rs();
+const R=Math.random;
+let state='title',moth,motes,spiders,parts,score,light,t,best=+localStorage.glowBest||0,target=null,keys={};
+function reset(){moth={x:W/2,y:H/2,vx:0,vy:0,a:0};motes=[];spiders=[];parts=[];score=0;light=100;t=0;
+ for(let i=0;i<5;i++)spawnMote();}
+function spawnMote(){motes.push({x:40+R()*(W-80),y:40+R()*(H-80),p:R()*6})}
+function spawnSpider(){const e=R()*4|0;let x=e<2?R()*W:(e==2?-20:W+20),y=e>=2?R()*H:(e==0?-20:H+20);
+ spiders.push({x,y,vx:0,vy:0,s:1+R()*.3})}
+function burst(x,y,c,n){for(let i=0;i<n;i++){const a=R()*6.28,s=1+R()*3;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,c})}}
+function start(){reset();state='play'}
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(state!='play'&&(e.key==' '||e.key=='Enter'))start()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+function pt(e){target={x:e.clientX,y:e.clientY}}
+cv.addEventListener('pointermove',pt);
+cv.addEventListener('pointerdown',e=>{pt(e);if(state!='play'&&t0()){start()}});
+let last=0;function t0(){const n=performance.now();if(n-last<500)return false;return true}
+function update(){
+ t+=1/60;
+ let ax=0,ay=0;
+ if(keys.arrowleft||keys.a)ax-=1;if(keys.arrowright||keys.d)ax+=1;
+ if(keys.arrowup||keys.w)ay-=1;if(keys.arrowdown||keys.s)ay+=1;
+ if(ax||ay){moth.vx+=ax*.5;moth.vy+=ay*.5;target=null}
+ else if(target){const dx=target.x-moth.x,dy=target.y-moth.y,d=Math.hypot(dx,dy);
+  if(d>8){moth.vx+=dx/d*.5;moth.vy+=dy/d*.5}}
+ moth.vx*=.93;moth.vy*=.93;moth.x+=moth.vx;moth.y+=moth.vy;
+ moth.x=Math.max(8,Math.min(W-8,moth.x));moth.y=Math.max(8,Math.min(H-8,moth.y));
+ if(Math.hypot(moth.vx,moth.vy)>.3)moth.a=Math.atan2(moth.vy,moth.vx);
+ light-=.05+t*.0008;
+ const rad=lr();
+ for(let i=motes.length-1;i>=0;i--){const m=motes[i];
+  if(Math.hypot(m.x-moth.x,m.y-moth.y)<18){motes.splice(i,1);score++;light=Math.min(100,light+14);burst(m.x,m.y,'255,230,140',14);spawnMote();
+   if(score%3==0&&spiders.length<12)spawnSpider()}}
+ for(const s of spiders){const dx=moth.x-s.x,dy=moth.y-s.y,d=Math.hypot(dx,dy);
+  // spiders only hunt inside your light; otherwise they wander toward you slowly
+  const sp=(d<rad+40?.9:.35)+Math.min(.7,t*.004);
+  s.vx=s.vx*.9+dx/d*sp*.1;s.vy=s.vy*.9+dy/d*sp*.1;s.x+=s.vx*3;s.y+=s.vy*3;
+  if(d<16){burst(moth.x,moth.y,'255,120,120',30);end()}}
+ for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.l-=.03;if(p.l<=0)parts.splice(i,1)}
+ if(light<=0){burst(moth.x,moth.y,'180,180,255',30);end()}
+}
+function end(){state='over';last=performance.now();if(score>best){best=score;localStorage.glowBest=best}}
+function lr(){return 50+Math.max(0,light)*1.6}
+function glow(x,y,r,c,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${c},${a})`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+function draw(){
+ ctx.fillStyle='#07071a';ctx.fillRect(0,0,W,H);
+ if(state=='title'){moth=moth||{x:W/2,y:H/2,a:0};}
+ const rad=state=='title'?160:lr();
+ const mx=moth?moth.x:W/2,my=moth?moth.y:H/2;
+ if(state!='title'){
+  // light pool
+  glow(mx,my,rad,'255,220,150',.35);
+  for(const m of (motes||[])){const d=Math.hypot(m.x-mx,m.y-my);
+   const v=d<rad?1:.25;glow(m.x,m.y,22+Math.sin(t*3+m.p)*4,'255,235,150',.8*v);
+   ctx.fillStyle=`rgba(255,250,210,${v})`;ctx.beginPath();ctx.arc(m.x,m.y,3,0,7);ctx.fill()}
+  for(const s of spiders){const d=Math.hypot(s.x-mx,s.y-my);
+   if(d<rad+30){ctx.save();ctx.translate(s.x,s.y);ctx.strokeStyle='#d46';ctx.fillStyle='#401';ctx.lineWidth=2;
+    for(let i=0;i<8;i++){const a=i*.78+Math.sin(t*10+i)*.2;ctx.beginPath();ctx.moveTo(0,0);
+     ctx.lineTo(Math.cos(a)*16*s.s,Math.sin(a)*16*s.s);ctx.stroke()}
+    ctx.beginPath();ctx.arc(0,0,8*s.s,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#f55';ctx.fillRect(-4,-3,2,2);ctx.fillRect(2,-3,2,2);ctx.restore()}
+   else{ // hint: faint eyes in the dark
+    ctx.fillStyle='rgba(255,80,80,.5)';ctx.fillRect(s.x-4,s.y-2,2,2);ctx.fillRect(s.x+2,s.y-2,2,2)}}
+  for(const p of parts){ctx.fillStyle=`rgba(${p.c},${p.l})`;ctx.fillRect(p.x,p.y,3,3)}
+  if(state=='play'){
+   ctx.save();ctx.translate(mx,my);ctx.rotate(moth.a+Math.PI/2);
+   const f=Math.sin(t*30)*.6;ctx.fillStyle='#e8e4ff';
+   for(const sd of[-1,1]){ctx.beginPath();ctx.ellipse(sd*8,0,9*(1-.4*Math.abs(f)),6,sd*.4,0,7);ctx.fill()}
+   ctx.fillStyle='#8a7';ctx.fillRect(-2,-8,4,14);ctx.restore()}
+  // HUD
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(20,20,160,8);
+  ctx.fillStyle=light<25?'#f66':'#fd8';ctx.fillRect(20,20,160*Math.max(0,light)/100,8);
+  ctx.fillStyle='#fff';ctx.font='18px system-ui';ctx.textAlign='left';ctx.fillText('Motes '+score+'   Best '+best,20,50);
+ }
+ ctx.textAlign='center';ctx.fillStyle='#fff';
+ if(state=='title'){glow(W/2,H/2-40,200,'255,220,150',.3);
+  ctx.font='bold 56px system-ui';ctx.fillText('Glowmoth',W/2,H/2-30);
+  ctx.font='18px system-ui';ctx.fillStyle='#bbc';
+  ctx.fillText('Your light is fading. Gather motes to refill it.',W/2,H/2+10);
+  ctx.fillText('Spiders hunt in the dark. Move: mouse / touch / arrows / WASD',W/2,H/2+36);
+  ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to begin',W/2,H/2+80)}
+ if(state=='over'){ctx.font='bold 44px system-ui';ctx.fillText(light<=0?'The light went out':'Caught!',W/2,H/2-10);
+  ctx.font='20px system-ui';ctx.fillText(score+' motes  ·  best '+best,W/2,H/2+26);
+  ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to retry',W/2,H/2+64)}
+}
+function loop(){if(state=='play')update();else if(state=='over'){t+=1/60;for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l-=.03}parts=parts.filter(p=>p.l>0)}draw();requestAnimationFrame(loop)}
+reset();state='title';loop();
+</script></body></html>
