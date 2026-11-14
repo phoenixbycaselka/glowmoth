@@ -86,12 +86,12 @@ function draw(){
  }
  ctx.textAlign='center';ctx.fillStyle='#fff';
  if(state=='title'){glow(W/2,H/2-40,200,'255,220,150',.3);
-  ctx.font='bold 56px system-ui';ctx.fillText('Glowmoth',W/2,H/2-30);
+  ctx.fillStyle='#fff';ctx.font='bold 56px system-ui';ctx.fillText('Glowmoth',W/2,H/2-30);
   ctx.font='18px system-ui';ctx.fillStyle='#bbc';
   ctx.fillText('Your light is fading. Gather motes to refill it.',W/2,H/2+10);
   ctx.fillText('Spiders hunt in the dark. Move: mouse / touch / arrows / WASD',W/2,H/2+36);
   ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to begin',W/2,H/2+80)}
- if(state=='over'){ctx.font='bold 44px system-ui';ctx.fillText(light<=0?'The light went out':'Caught!',W/2,H/2-10);
+ if(state=='over'){ctx.fillStyle='#fff';ctx.font='bold 44px system-ui';ctx.fillText(light<=0?'The light went out':'Caught!',W/2,H/2-10);
   ctx.font='20px system-ui';ctx.fillText(score+' motes  ·  best '+best,W/2,H/2+26);
   ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to retry',W/2,H/2+64)}
 }
