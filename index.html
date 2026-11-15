@@ -99,6 +99,10 @@ function draw(){
   ctx.font='20px system-ui';ctx.fillText(score+' motes  ·  best '+best,W/2,H/2+26);
   ctx.fillStyle='#fd8';ft(GO+' to retry',W/2,H/2+64)}
 }
-function loop(){if(state=='play')update();else if(state=='over'){t+=1/60;for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l-=.03}parts=parts.filter(p=>p.l>0)}draw();requestAnimationFrame(loop)}
-reset();state='title';loop();
+function step(){if(state=='play')update();else if(state=='over'){t+=1/60;for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l-=.03}parts=parts.filter(p=>p.l>0)}}
+// Fixed 60 Hz simulation, whatever the screen's refresh rate (120 Hz phones used to run the game at double speed).
+// The backlog is capped at 0.25 s so a tab that was in the background doesn't fast-forward into a spider.
+let acc=0,prev=null;const DT=1000/60;
+function loop(now){if(prev!==null){acc=Math.min(acc+now-prev,250);while(acc>=DT){step();acc-=DT}}prev=now;draw();requestAnimationFrame(loop)}
+reset();state='title';requestAnimationFrame(loop);
 </script></body></html>
