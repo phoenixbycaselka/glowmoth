@@ -1,7 +1,7 @@
-// node test/bot.js [games]  - play-test: a greedy bot (nearest mote; flees spiders within F px; dims when one is within D px) plays headless games.
+// node test/bot.js [games] [WxH]  - play-test: a greedy bot (nearest mote; flees spiders within F px; dims when one is within D px) plays headless games.
 // Reports duration, motes and cause of death per game. Calls step() directly (no drawing), so it is fast.
 const os = require("os"), path = require("path"), { withPage } = require(os.homedir() + "/tools/pshot.js");
-const N = +process.argv[2] || 6;
+const N = +process.argv[2] || 6, [BW, BH] = (process.argv[3] || "1000x700").split("x").map(Number);
 withPage(async (page, go) => {
   await go("file://" + path.join(__dirname, "..", "index.html") + "?" + Date.now());
   return page.evaluate((N) => { const out = [];
@@ -14,4 +14,4 @@ withPage(async (page, go) => {
         step(); }
       out.push({ flee: F, dimAt: D, secs: +t.toFixed(0), motes: score, end: light <= 0 ? "light" : "spider", spiders: spiders.length }); }
     return out; }, N);
-}, { w: 1000, h: 700 }).then((r) => { for (const g of r.value) console.log(JSON.stringify(g)); if (r.errors.length) console.log(r.errors); });
+}, { w: BW, h: BH }).then((r) => { for (const g of r.value) console.log(JSON.stringify(g)); if (r.errors.length) console.log(r.errors); });
