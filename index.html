@@ -15,7 +15,7 @@ let W,H;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}addEventList
 const R=Math.random;
 let state='title',moth,motes,spiders,parts,score,light,t,best=+localStorage.glowBest||0,target=null,keys={};
 function reset(){moth={x:W/2,y:H/2,vx:0,vy:0,a:0};motes=[];spiders=[];parts=[];score=0;light=100;t=0;
- for(let i=0;i<5;i++)spawnMote();}
+ for(let i=0;i<3;i++)spawnMote();}
 function spawnMote(){motes.push({x:40+R()*(W-80),y:40+R()*(H-80),p:R()*6})}
 function spawnSpider(){const e=R()*4|0;let x=e<2?R()*W:(e==2?-20:W+20),y=e>=2?R()*H:(e==0?-20:H+20);
  spiders.push({x,y,vx:0,vy:0,s:1+R()*.3})}
@@ -38,10 +38,10 @@ function update(){
  moth.vx*=.93;moth.vy*=.93;moth.x+=moth.vx;moth.y+=moth.vy;
  moth.x=Math.max(8,Math.min(W-8,moth.x));moth.y=Math.max(8,Math.min(H-8,moth.y));
  if(Math.hypot(moth.vx,moth.vy)>.3)moth.a=Math.atan2(moth.vy,moth.vx);
- light-=.05+t*.0008;
+ light-=.16+t*.0008;
  const rad=lr();
  for(let i=motes.length-1;i>=0;i--){const m=motes[i];
-  if(Math.hypot(m.x-moth.x,m.y-moth.y)<18){motes.splice(i,1);score++;light=Math.min(100,light+14);burst(m.x,m.y,'255,230,140',14);spawnMote();
+  if(Math.hypot(m.x-moth.x,m.y-moth.y)<18){motes.splice(i,1);score++;light=Math.min(100,light+Math.max(7,14-t*.12));burst(m.x,m.y,'255,230,140',14);spawnMote();
    if(score%3==0&&spiders.length<12)spawnSpider()}}
  for(const s of spiders){const dx=moth.x-s.x,dy=moth.y-s.y,d=Math.hypot(dx,dy);
   // spiders only hunt inside your light; otherwise they wander toward you slowly
