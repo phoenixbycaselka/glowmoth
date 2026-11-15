@@ -1,6 +1,6 @@
 # Glowmoth
 
-A tiny, single-file browser game. You are a moth whose light is fading. Gather glowing motes to refill it, and avoid the spiders that hunt in the dark.
+A tiny, single-file browser game. You are a moth whose light is fading. Gather glowing motes to refill it, and avoid the spiders, which hunt whatever your light reveals.
 
 **Play:** https://phoenixbycaselka.github.io/glowmoth/
 
