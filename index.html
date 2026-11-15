@@ -52,6 +52,10 @@ function update(){
  if(light<=0){burst(moth.x,moth.y,'180,180,255',30);end()}
 }
 function end(){state='over';last=performance.now();if(score>best){best=score;localStorage.glowBest=best}}
+// centred text that shrinks to fit narrow (phone) screens
+function ft(s,x,y){const w=ctx.measureText(s).width,m=W-24;if(w<=m)return ctx.fillText(s,x,y);
+ const f=ctx.font;ctx.font=f.replace(/(\d+)px/,(a,n)=>Math.floor(n*m/w)+'px');ctx.fillText(s,x,y);ctx.font=f}
+const GO=matchMedia('(pointer:coarse)').matches?'Tap':'Click or press Space';
 function lr(){return 50+Math.max(0,light)*1.6}
 function glow(x,y,r,c,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${c},${a})`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
 function draw(){
@@ -86,14 +90,14 @@ function draw(){
  }
  ctx.textAlign='center';ctx.fillStyle='#fff';
  if(state=='title'){glow(W/2,H/2-40,200,'255,220,150',.3);
-  ctx.fillStyle='#fff';ctx.font='bold 56px system-ui';ctx.fillText('Glowmoth',W/2,H/2-30);
+  ctx.fillStyle='#fff';ctx.font='bold 56px system-ui';ft('Glowmoth',W/2,H/2-30);
   ctx.font='18px system-ui';ctx.fillStyle='#bbc';
-  ctx.fillText('Your light is fading. Gather motes to refill it.',W/2,H/2+10);
-  ctx.fillText('Spiders hunt in the dark. Move: mouse / touch / arrows / WASD',W/2,H/2+36);
-  ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to begin',W/2,H/2+80)}
- if(state=='over'){ctx.fillStyle='#fff';ctx.font='bold 44px system-ui';ctx.fillText(light<=0?'The light went out':'Caught!',W/2,H/2-10);
+  ft('Your light is fading. Gather motes to refill it.',W/2,H/2+10);
+  ft('Spiders hunt in the dark.',W/2,H/2+36);ft('Move: mouse / touch / arrows / WASD',W/2,H/2+62);
+  ctx.fillStyle='#fd8';ft(GO+' to begin',W/2,H/2+104)}
+ if(state=='over'){ctx.fillStyle='#fff';ctx.font='bold 44px system-ui';ft(light<=0?'The light went out':'Caught!',W/2,H/2-10);
   ctx.font='20px system-ui';ctx.fillText(score+' motes  ·  best '+best,W/2,H/2+26);
-  ctx.fillStyle='#fd8';ctx.fillText('Click or press Space to retry',W/2,H/2+64)}
+  ctx.fillStyle='#fd8';ft(GO+' to retry',W/2,H/2+64)}
 }
 function loop(){if(state=='play')update();else if(state=='over'){t+=1/60;for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l-=.03}parts=parts.filter(p=>p.l>0)}draw();requestAnimationFrame(loop)}
 reset();state='title';loop();
